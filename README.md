@@ -21,8 +21,8 @@ Requires ProcessWire >= v3.0.16.
 
 ### Add Module From URL
 
-* If you want to see autocomplete suggestions for the "Add Module From URL" field then enter them in the following format:
-[autocomplete suggestion] > [module ZIP url]. 
+* If you want to see autocomplete suggestions for the "Add Module From URL" field then enter them in the following format:  
+[autocomplete suggestion] > [module ZIP url].  
 Example: RepeaterImages > https://github.com/Toutouwai/RepeaterImages/archive/master.zip
 
 ### Awesomplete options
