@@ -24,7 +24,7 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 		return array(
 			'title' => 'Autocomplete Module Class Name',
 			'summary' => 'Provides autocomplete suggestions for the "Add Module From Directory" field.',
-			'version' => '0.1.1',
+			'version' => '0.1.2',
 			'author' => 'Robin Sallis',
 			'href' => 'https://github.com/Toutouwai/AutocompleteModuleClassName',
 			'icon' => 'angle-double-right',
@@ -274,6 +274,7 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 		$b = $modules->InputfieldButton;
 		$b->name = 'get_directory_modules';
 		$b->value = $this->_('Get class names from modules directory');
+		$b->icon = 'refresh';
 		$b->type = 'submit';
 
 		/* @var InputfieldMarkup $f */
