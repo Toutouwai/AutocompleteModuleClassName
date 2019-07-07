@@ -99,7 +99,7 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 	}
 
 	/**
-	 * After Modules::saveConfig
+	 * Before Modules::saveConfig
 	 *
 	 * @param HookEvent $event
 	 */
