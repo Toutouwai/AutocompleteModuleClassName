@@ -24,7 +24,7 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 		return array(
 			'title' => 'Autocomplete Module Class Name',
 			'summary' => 'Provides autocomplete suggestions for the "Add Module From Directory" field.',
-			'version' => '0.1.2',
+			'version' => '0.1.3',
 			'author' => 'Robin Sallis',
 			'href' => 'https://github.com/Toutouwai/AutocompleteModuleClassName',
 			'icon' => 'angle-double-right',
@@ -210,7 +210,7 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 		}
 		$contents = "var $list_var_name = [{$contents}];";
 		$filename = $this->wire('config')->paths->$this . $list_type . '.js';
-		return $this->wire('files')->filePutContents($filename, $contents);
+		return file_put_contents($filename, $contents);
 	}
 
 	/**
