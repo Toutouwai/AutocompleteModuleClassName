@@ -24,7 +24,7 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 		return array(
 			'title' => 'Autocomplete Module Class Name',
 			'summary' => 'Provides autocomplete suggestions for the "Add Module From Directory" field.',
-			'version' => '0.1.3',
+			'version' => '0.1.4',
 			'author' => 'Robin Sallis',
 			'href' => 'https://github.com/Toutouwai/AutocompleteModuleClassName',
 			'icon' => 'angle-double-right',
@@ -58,6 +58,8 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 	 * @param HookEvent $event
 	 */
 	protected function beforeProcessModuleExecute(HookEvent $event) {
+		// Return early if this is not the module listing
+		if($this->wire('input')->post->count()) return;
 		$config = $this->wire('config');
 		$info = $this->getModuleInfo();
 		$version = $info['version'];
@@ -93,6 +95,8 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 	 * @param HookEvent $event
 	 */
 	protected function afterProcessModuleExecute(HookEvent $event) {
+		// Return early if this is not the module listing
+		if($this->wire('input')->post->count()) return;
 		$script = $this->buildAwesompleteInit('amcn_list', 'download_name');
 		if($this->url_list) $script .= $this->buildAwesompleteInit('amcn_url_list', 'download_zip_url');
 		$event->return .= "<script>$script</script>";
