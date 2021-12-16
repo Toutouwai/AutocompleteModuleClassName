@@ -24,7 +24,7 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 		return array(
 			'title' => 'Autocomplete Module Class Name',
 			'summary' => 'Provides autocomplete suggestions for the "Add Module From Directory" field.',
-			'version' => '0.1.4',
+			'version' => '0.1.5',
 			'author' => 'Robin Sallis',
 			'href' => 'https://github.com/Toutouwai/AutocompleteModuleClassName',
 			'icon' => 'angle-double-right',
@@ -59,10 +59,19 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 	 */
 	protected function beforeProcessModuleExecute(HookEvent $event) {
 		// Return early if this is not the module listing
-		if($this->wire('input')->post->count()) return;
-		$config = $this->wire('config');
+		if($this->wire()->input->post->count()) return;
+		$config = $this->wire()->config;
 		$info = $this->getModuleInfo();
 		$version = $info['version'];
+
+		// Hook module class name field render
+		$this->addHookBefore('InputfieldName::render', function(HookEvent $event) {
+			/** @var InputfieldSubmit $inputfield */
+			$inputfield = $event->object;
+			if($inputfield->name !== 'download_name') return;
+			$url = $this->wire()->config->urls->admin . 'module/edit?name=AutocompleteModuleClassName&get_directory_modules=1&return=1';
+			$inputfield->appendMarkup = "<p class='notes' style='background-color:transparent;'>AutocompleteModuleClassName: <a href='$url' title='" . $this->_('This will take 30-60 seconds') . "'><i class='fa fa-fw fa-refresh' style='margin-right:3px;'></i>" . $this->_('Refresh modules directory list') . '</a></p>';
+		});
 
 		// Add list JS files
 		if($this->options_type === 'custom_list') {
@@ -96,7 +105,7 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 	 */
 	protected function afterProcessModuleExecute(HookEvent $event) {
 		// Return early if this is not the module listing
-		if($this->wire('input')->post->count()) return;
+		if($this->wire()->input->post->count()) return;
 		$script = $this->buildAwesompleteInit('amcn_list', 'download_name');
 		if($this->url_list) $script .= $this->buildAwesompleteInit('amcn_url_list', 'download_zip_url');
 		$event->return .= "<script>$script</script>";
@@ -110,7 +119,7 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 	protected function beforeSaveConfig(HookEvent $event) {
 		if($event->arguments(0) != $this) return;
 		$data = $event->arguments(1);
-		$old_data = $this->wire('modules')->getConfig($this);
+		$old_data = $this->wire()->modules->getConfig($this);
 		// Create JS file if any list changed
 		$list_types = array('directory_list', 'custom_list', 'url_list');
 		foreach($list_types as $list_type) {
@@ -145,13 +154,13 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 	 * @return array
 	 */
 	public function getDirectoryModuleNames($base_url = '', $module_names = array()) {
-		$key = $this->wire('config')->moduleServiceKey;
+		$key = $this->wire()->config->moduleServiceKey;
 		$http = new WireHttp();
 		$http->setTimeout(30);
 		// If not a recursive call to the method...
 		if(!$base_url) {
 			// Set base url to default
-			$base_url = $this->wire('config')->moduleServiceURL;
+			$base_url = $this->wire()->config->moduleServiceURL;
 			// Get module class names to exclude
 			$exclude_names = $this->getDirectoryExcludeNames('language-pack');
 			$exclude_names = $this->getDirectoryExcludeNames('language-pack', $exclude_names);
@@ -176,8 +185,8 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 	 * @return array
 	 */
 	public function getDirectoryExcludeNames($category, $exclude_names = array()) {
-		$key = $this->wire('config')->moduleServiceKey;
-		$base_url = $this->wire('config')->moduleServiceURL;
+		$key = $this->wire()->config->moduleServiceKey;
+		$base_url = $this->wire()->config->moduleServiceURL;
 		$http = new WireHttp();
 		$http->setTimeout(30);
 		$exclude_data = $http->getJSON("{$base_url}?apikey={$key}&limit=400&field=class_name&category={$category}");
@@ -213,7 +222,7 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 			$contents = '"' . implode('","', $list_items) . '"';
 		}
 		$contents = "var $list_var_name = [{$contents}];";
-		$filename = $this->wire('config')->paths->$this . $list_type . '.js';
+		$filename = $this->wire()->config->paths->$this . $list_type . '.js';
 		return file_put_contents($filename, $contents);
 	}
 
@@ -235,14 +244,24 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 	 * @param InputfieldWrapper $inputfields
 	 */
 	public function getModuleConfigInputfields($inputfields) {
-		$modules = $this->wire('modules');
+		$modules = $this->wire()->modules;
+		$input = $this->wire()->input;
+		$session = $this->wire()->session;
 
-		if($this->wire('input')->post->get_directory_modules) {
+		// Look for input variable in GET and POST
+		$get_directory_modules = $input->get_directory_modules;
+		if($get_directory_modules) {
 			$module_names = $this->getDirectoryModuleNames();
 			$module_names_str = implode("\n", $module_names);
 			$modules->saveConfig($this, 'directory_list', $module_names_str);
+			$this->directory_list = $module_names_str;
 			$this->createJsFile('directory_list');
-			$this->wire('session')->redirect($this->wire('input')->url(true));
+			$this->wire()->session->message('AutocompleteModuleClassName: ' . $this->_('Refreshed modules directory list'));
+			if($input->get('return')) {
+				$session->redirect($this->wire()->config->urls->admin . 'module/?install#tab_new_modules');
+			} else {
+				$session->redirect($input->url(true));
+			}
 		}
 
 		/* @var InputfieldFieldset $fs1 */
@@ -283,7 +302,7 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 
 		/* @var InputfieldMarkup $f */
 		$f = $modules->InputfieldMarkup;
-		$f->label = $this->_('Update modules directory class name list');
+		$f->label = $this->_('Refresh modules directory list');
 		$f->value = $b->render();
 		$f->showIf = 'options_type=directory_list';
 		$fs1->add($f);
@@ -345,7 +364,7 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 		// Get directory module class names on install
 		$module_names = $this->getDirectoryModuleNames();
 		$module_names_str = implode("\n", $module_names);
-		$this->wire('modules')->saveConfig($this, 'directory_list', $module_names_str);
+		$this->wire()->modules->saveConfig($this, 'directory_list', $module_names_str);
 		$this->directory_list = $module_names_str;
 		$this->createJsFile('directory_list');
 	}
@@ -355,10 +374,9 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 	 */
 	public function ___uninstall() {
 		// Delete list files
-		$config = $this->wire('config');
 		$list_types = array('directory_list', 'custom_list', 'url_list');
 		foreach($list_types as $list_type) {
-			$filename = $config->paths->$this . "$list_type.js";
+			$filename = $this->wire()->config->paths->$this . "$list_type.js";
 			if(is_file($filename)) unlink($filename);
 		}
 	}
