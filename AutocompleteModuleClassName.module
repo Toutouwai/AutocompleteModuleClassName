@@ -1,20 +1,5 @@
 <?php namespace ProcessWire;
 
-/**
- *
- * Autocomplete Module Class Name
- *
- * @author Robin Sallis
- *
- * ProcessWire 3.x
- * Copyright (C) 2011 by Ryan Cramer
- * Licensed under GNU/GPL v2, see LICENSE.TXT
- *
- * http://www.processwire.com
- * http://www.ryancramer.com
- *
- */
-
 class AutocompleteModuleClassName extends WireData implements Module, ConfigurableModule {
 
 	/**
@@ -24,7 +9,7 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 		return array(
 			'title' => 'Autocomplete Module Class Name',
 			'summary' => 'Provides autocomplete suggestions for the "Add Module From Directory" field.',
-			'version' => '0.1.5',
+			'version' => '0.1.6',
 			'author' => 'Robin Sallis',
 			'href' => 'https://github.com/Toutouwai/AutocompleteModuleClassName',
 			'icon' => 'angle-double-right',
@@ -143,7 +128,7 @@ class AutocompleteModuleClassName extends WireData implements Module, Configurab
 		if($this->use_fuzzy) $options .= "filter: amcn_filter, item: amcn_item, ";
 		$options .= $this->awesomplete_options;
 		$options = '{' . $options . '}';
-		return "new Awesomplete(document.getElementById('$input_id'), $options);";
+		return "document.addEventListener('DOMContentLoaded', function() { new Awesomplete(document.getElementById('$input_id'), $options); });";
 	}
 
 	/**
